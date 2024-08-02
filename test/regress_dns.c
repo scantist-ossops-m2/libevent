@@ -512,6 +512,26 @@ static struct regress_dns_server_table search_table[] = {
 };
 
 static void
+dns_search_empty_test(void *arg)
+{
+	struct basic_test_data *data = arg;
+	struct event_base *base = data->base;
+	struct evdns_base *dns = NULL;
+
+	dns = evdns_base_new(base, 0);
+
+	evdns_base_search_add(dns, "whatever.example.com");
+
+	n_replies_left = 1;
+	exit_base = base;
+
+	tt_ptr_op(evdns_base_resolve_ipv4(dns, "", 0, generic_dns_callback, NULL), ==, NULL);
+
+end:
+	if (dns)
+		evdns_base_free(dns, 0);
+}
+static void
 dns_search_test(void *arg)
 {
 	struct basic_test_data *data = arg;
@@ -1987,6 +2007,7 @@ struct testcase_t dns_testcases[] = {
 	DNS_LEGACY(gethostbyname6, TT_FORK|TT_NEED_BASE|TT_NEED_DNS|TT_OFF_BY_DEFAULT),
 	DNS_LEGACY(gethostbyaddr, TT_FORK|TT_NEED_BASE|TT_NEED_DNS|TT_OFF_BY_DEFAULT),
 	{ "resolve_reverse", dns_resolve_reverse, TT_FORK|TT_OFF_BY_DEFAULT, NULL, NULL },
+	{ "search_empty", dns_search_empty_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "search", dns_search_test, TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
 	{ "search_cancel", dns_search_cancel_test,
 	  TT_FORK|TT_NEED_BASE, &basic_setup, NULL },
